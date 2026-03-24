@@ -1,0 +1,5 @@
+{
+  "name": "ChemStock FP",
+  "description": "Plataforma profesional para la gestión de inventario de productos químicos y equipos en institutos de FP, con extracción de datos mediante IA.",
+  "requestFramePermissions": []
+}

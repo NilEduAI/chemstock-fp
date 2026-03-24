@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "Chemical": {
+      "title": "Chemical",
+      "description": "A chemical product in the inventory",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "formula": { "type": "string" },
+        "cas": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "minQuantity": { "type": "number" },
+        "location": { "type": "string" },
+        "hazards": { "type": "array", "items": { "type": "string" } },
+        "precautions": { "type": "array", "items": { "type": "string" } },
+        "manufacturer": { "type": "string" }
+      },
+      "required": ["name", "quantity", "unit", "minQuantity", "location"]
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "description": "A piece of laboratory equipment",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "model": { "type": "string" },
+        "serialNumber": { "type": "string" },
+        "status": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["name", "status", "location"]
+    }
+  },
+  "firestore": {
+    "/chemicals/{chemicalId}": {
+      "schema": { "$ref": "#/entities/Chemical" },
+      "description": "Chemical inventory"
+    },
+    "/equipment/{equipmentId}": {
+      "schema": { "$ref": "#/entities/Equipment" },
+      "description": "Equipment inventory"
+    }
+  }
+}

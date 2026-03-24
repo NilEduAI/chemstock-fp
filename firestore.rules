@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: chemicals
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - formula: string (optional)
+    //   - cas: string (optional)
+    //   - quantity: number (required)
+    //   - unit: string (required)
+    //   - minQuantity: number (required)
+    //   - location: string (required)
+    //   - hazards: list (optional)
+    //   - precautions: list (optional)
+    //   - manufacturer: string (optional)
+    //
+    // Collection: equipment
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - brand: string (optional)
+    //   - model: string (optional)
+    //   - serialNumber: string (optional)
+    //   - status: string (required)
+    //   - location: string (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isPositiveOrZero(field) {
+      return request.resource.data[field] is number && request.resource.data[field] >= 0;
+    }
+
+    function isValidChemical(data) {
+      return hasRequiredFields(['name', 'quantity', 'unit', 'minQuantity', 'location']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.unit is string && data.unit.size() > 0 && data.unit.size() < 50 &&
+             data.location is string && data.location.size() > 0 && data.location.size() < 200 &&
+             (!('formula' in data) || (data.formula is string && data.formula.size() < 200)) &&
+             (!('cas' in data) || (data.cas is string && data.cas.size() < 100)) &&
+             (!('manufacturer' in data) || (data.manufacturer is string && data.manufacturer.size() < 200)) &&
+             (!('hazards' in data) || (data.hazards is list && data.hazards.size() < 100)) &&
+             (!('precautions' in data) || (data.precautions is list && data.precautions.size() < 100));
+    }
+
+    function isValidEquipment(data) {
+      return hasRequiredFields(['name', 'status', 'location']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.status is string && data.status in ['Operativo', 'En Mantenimiento', 'Averiado', 'Baja'] &&
+             data.location is string && data.location.size() > 0 && data.location.size() < 200 &&
+             (!('brand' in data) || (data.brand is string && data.brand.size() < 200)) &&
+             (!('model' in data) || (data.model is string && data.model.size() < 200)) &&
+             (!('serialNumber' in data) || (data.serialNumber is string && data.serialNumber.size() < 200));
+    }
+
+    match /chemicals/{chemicalId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidChemical(request.resource.data) && isPositiveOrZero('quantity') && isPositiveOrZero('minQuantity');
+      allow update: if isAuthenticated() && isValidChemical(request.resource.data) && isPositiveOrZero('quantity') && isPositiveOrZero('minQuantity');
+      allow delete: if isAuthenticated();
+    }
+
+    match /equipment/{equipmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEquipment(request.resource.data);
+      allow update: if isAuthenticated() && isValidEquipment(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+  }
+}
